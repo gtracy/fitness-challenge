@@ -14,6 +14,27 @@ from google.appengine.ext.webapp import util
 
 from dataModel import *
 
+def goldStar():
+    logging.debug('Success!!!')
+    return
+
+def silverStar():
+    return
+
+
+achievement_pointers = {
+  'Gold Star':goldStar,
+  'Silver Star':silverStar,
+}
+
+class AnalyzeAchievementHandler(webapp.RequestHandler):
+    def post(self):
+      award = db.get(self.request.get('award'))
+      user = db.get(self.request.get('user'))
+      logging.debug('taking a look at award %s' % award.name)
+      achievement_pointers[award.name]()
+
+## end AnalyzeAchievementHandler
 
 class NewAchievementHandler(webapp.RequestHandler):
     def get(self):
@@ -44,6 +65,7 @@ def main():
     logging.getLogger().setLevel(logging.DEBUG)
     application = webapp.WSGIApplication([('/achievements/new', NewAchievementHandler),
                                           ('/achievements/create', CreateAchievementHandler),
+                                          ('/achievements/analyze', AnalyzeAchievementHandler),
                                          ],
                                          debug=True)
     util.run_wsgi_app(application)

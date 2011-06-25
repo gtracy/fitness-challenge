@@ -30,18 +30,31 @@ class MainHandler(webapp.RequestHandler):
 ## end MainHandler
 
 class CronHandler(webapp.RequestHandler):
+    def get(self,period):
+      self.post(period)
+      return 'done'
+
     def post(self,period):
+      logging.debug('looking for achievements to analyze...')
       # Get the list of active Achievement models for the respective time period ID
       awards = db.GqlQuery('select * from Achievement where time_period=:1',period).fetch(100)
       # Get the list of active Users
       users = db.GqlQuery('select * from User where active=True').fetch(100)
 
-      foreach a in awards:
-        foreach u in users:
+      for a in awards:
+        logging.debug('check users for achievement %s' % a.name)
+        for u in users:
           # check if the achievement has not been awarded for user
-          if a not in u.achievements:
+          logging.debug('does %s already have achievement %s?' % (u.name,a.name))
+          if a.key() not in u.achievements:
+            logging.debug('creating analysis task for %s' % a.name)
             # spawn a task for the user/achievement tuple
-
+            task = Task(url='/achievements/analyze', 
+                        params={'user':u.key(),
+                                'award':a.key(),
+                               })
+            task.add('analyze')
+    
       
 ## end CronHandler
 
